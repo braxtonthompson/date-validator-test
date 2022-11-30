@@ -1,0 +1,31 @@
+<form [formGroup]="form" class="form">
+
+  <mat-form-field appearance="fill">
+    <mat-label>Date 1</mat-label>
+    <input matInput [matDatepicker]="picker1" formControlName="date1">
+    <mat-hint>MM/DD/YYYY</mat-hint>
+    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+    <mat-datepicker #picker1></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Date 2</mat-label>
+    <input matInput [matDatepicker]="picker2" formControlName="date2">
+    <mat-hint>MM/DD/YYYY</mat-hint>
+    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+    <mat-datepicker #picker2></mat-datepicker>
+    <mat-error>Date must be greater than or equal to {{ date1Control.value | date }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Date 3</mat-label>
+    <input matInput [matDatepicker]="picker3" formControlName="date3">
+    <mat-hint>MM/DD/YYYY</mat-hint>
+    <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+    <mat-datepicker #picker3></mat-datepicker>
+    <mat-error>Date must be greater than or equal to {{ date2Control.value | date }}</mat-error>
+  </mat-form-field>
+
+  <button mat-flat-button [disabled]="form.invalid" color="primary">Save</button>
+
+</form>

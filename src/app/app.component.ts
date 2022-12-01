@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, FormGroupDirective, NgForm, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -11,9 +12,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   form!: FormGroup;
 
-  date1Control: FormControl<Date | null> = new FormControl(null, [Validators.required]);
-  date2Control: FormControl<Date | null> = new FormControl(null, [Validators.required, DateValidators.greaterThan(this.date1Control)]);
-  date3Control: FormControl<Date | null> = new FormControl(null, [DateValidators.greaterThan(this.date2Control)]);
+  date1Control: FormControl<Date | null> = new FormControl(new Date(2022, 10, 7), [Validators.required]);
+  date2Control: FormControl<Date | null> = new FormControl(null, [Validators.required]);
+  date3Control: FormControl<Date | null> = new FormControl(null);
 
   subscriptions: Subscription[] = [];
 
@@ -24,12 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
       date1: this.date1Control,
       date2: this.date2Control,
       date3: this.date3Control
-    });
-
-    this.subscriptions.push(
-      this.date1Control.valueChanges.subscribe(() => this.date2Control.updateValueAndValidity()),
-      this.date2Control.valueChanges.subscribe(() => this.date3Control.updateValueAndValidity())
-    )
+    }, { validators: sequentialDates });
   }
 
   ngOnDestroy(): void {
@@ -37,18 +33,24 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 }
 
-export class DateValidators {
-  static greaterThan(startControl: AbstractControl): ValidatorFn {
-    return (endControl: AbstractControl): ValidationErrors | null => {
-      const startDate: Date = startControl.value;
-      const endDate: Date = endControl.value;
-      if (!startDate || !endDate) {
-        return null;
-      }
-      if (startDate > endDate) {
-        return { greaterThan: true };
-      }
-      return null;
-    };
-  }
+const sequentialDates: ValidatorFn = (form: AbstractControl): ValidationErrors | null => {
+  const date1Control = form.get('date1');
+  const date2Control = form.get('date2');
+  const date3Control = form.get('date3');
+
+  const date1GreaterThanDate2: boolean = date1Control?.value > date2Control?.value;
+  const date1GreaterThanDate3: boolean = date1Control?.value > date3Control?.value;
+  const date2GreaterThanDate3: boolean = date2Control?.value > date3Control?.value;
+
+  date2Control?.setErrors(date1GreaterThanDate2 ? {DATE1_GREATER_THAN_DATE2: true} : null);
+
+  let date3Errors: ValidationErrors = {
+    ...(date1GreaterThanDate3) && { DATE1_GREATER_THAN_DATE3: true },
+    ...(date2GreaterThanDate3) && { DATE2_GREATER_THAN_DATE3: true }
+  };
+  
+  date3Control?.setErrors(Object.keys(date3Errors).length ? date3Errors : null);
+
+  return null;
 }
+
